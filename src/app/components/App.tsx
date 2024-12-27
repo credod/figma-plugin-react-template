@@ -1,42 +1,37 @@
-import React from 'react';
-import logo from '../assets/logo.svg';
-import '../styles/ui.css';
+import React, { useRef } from 'react';
+import useOnPluginMessage from '../hooks/useOnPluginMessage';
+import triggerPluginAction from '../util/triggerPluginAction';
+import { PLUGIN_ACTIONS } from '../constants';
 
 function App() {
-  const textbox = React.useRef<HTMLInputElement>(undefined);
-
-  const countRef = React.useCallback((element: HTMLInputElement) => {
-    if (element) element.value = '5';
-    textbox.current = element;
-  }, []);
+  const inputRef = useRef(null)
 
   const onCreate = () => {
-    const count = parseInt(textbox.current.value, 10);
-    parent.postMessage({ pluginMessage: { type: 'create-rectangles', count } }, '*');
+    const text = inputRef.current.value;
+    triggerPluginAction({ type: PLUGIN_ACTIONS.CREATE_BUTTON, text })
   };
 
   const onCancel = () => {
-    parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*');
+    triggerPluginAction({ type: PLUGIN_ACTIONS.CANCEL } )
   };
 
-  React.useEffect(() => {
-    // This is how we read messages sent from the plugin controller
-    window.onmessage = (event) => {
-      const { type, message } = event.data.pluginMessage;
-      if (type === 'create-rectangles') {
-        console.log(`Figma Says: ${message}`);
-      }
-    };
-  }, []);
+  // This is how we read messages sent from the plugin controller
+  useOnPluginMessage((pluginMessage) => {
+    console.log(pluginMessage);
+
+    const { type, message } = pluginMessage;
+    if (type === PLUGIN_ACTIONS.CREATE_BUTTON) {
+      console.log(`Figma Says: ${message}`);
+    }
+  });
 
   return (
     <div>
-      <img src={logo} />
-      <h2>Rectangle Creator</h2>
+      <h1>Button Creator</h1>
       <p>
-        Count: <input ref={countRef} />
+        Title <input ref={inputRef} />
       </p>
-      <button id="create" onClick={onCreate}>
+      <button onClick={onCreate}>
         Create
       </button>
       <button onClick={onCancel}>Cancel</button>
